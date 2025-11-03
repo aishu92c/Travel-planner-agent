@@ -1,0 +1,28 @@
+{
+  "recommendations": [
+    "ms-python.python",
+    "ms-python.vscode-pylance",
+    "ms-python.black-formatter",
+    "charliermarsh.ruff",
+    "ms-python.mypy-type-checker",
+    "littlefoxteam.vscode-python-test-adapter",
+    "amazonwebservices.aws-toolkit-vscode",
+    "ms-azuretools.vscode-docker",
+    "eamodio.gitlens",
+    "github.vscode-pull-request-github",
+    "redhat.vscode-yaml",
+    "tamasfe.even-better-toml",
+    "yzhang.markdown-all-in-one",
+    "davidanson.vscode-markdownlint",
+    "mikestead.dotenv",
+    "humao.rest-client",
+    "streetsidesoftware.code-spell-checker",
+    "editorconfig.editorconfig",
+    "ms-toolsai.jupyter",
+    "ms-toolsai.jupyter-keymap",
+    "github.vscode-github-actions",
+    "ms-vscode-remote.remote-containers",
+    "gruntfuggly.todo-tree",
+    "wayou.vscode-todo-highlight"
+  ]
+}

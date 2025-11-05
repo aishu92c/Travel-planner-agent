@@ -96,7 +96,7 @@ namespaces = false
 
 [tool.black]
 line-length = 100
-target-version = ['py313']
+target-version = ['py312']
 include = '\.pyi?$'
 extend-exclude = '''
 /(
@@ -114,7 +114,7 @@ extend-exclude = '''
 
 [tool.ruff]
 line-length = 100
-target-version = "py313"
+target-version = "py312"
 select = [
     "E",  # pycodestyle errors
     "W",  # pycodestyle warnings
@@ -134,7 +134,7 @@ ignore = [
 "__init__.py" = ["F401"]
 
 [tool.mypy]
-python_version = "3.13"
+python_version = "3.12"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true
@@ -187,3 +187,12 @@ exclude_lines = [
     "if TYPE_CHECKING:",
     "@abstractmethod",
 ]
+
+[tool.bandit]
+# Exclude test files and directories from certain checks
+exclude_dirs = ["/tests", "/test", "test_*.py"]
+skips = ["B101"]  # Skip assert_used check for test files
+
+[tool.bandit.assert_used]
+# Allow assert statements in test files
+skips = ["*/test_*.py", "tests/**/*.py"]

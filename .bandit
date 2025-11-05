@@ -1,0 +1,14 @@
+[bandit]
+# Bandit configuration file
+# Skip B101 (assert_used) for test files as asserts are expected in tests
+
+# Exclude paths
+exclude_dirs = /venv/,/env/,/.venv/,/.env/,/build/,/dist/,/.git/,/__pycache__/
+
+# Skip assert_used (B101) in test files
+[bandit.skips]
+# B101: Use of assert detected - This is expected in test files
+# Skip for all test files
+tests/**/*: B101
+test_*.py: B101
+**/test_*.py: B101

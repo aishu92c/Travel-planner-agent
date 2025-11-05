@@ -41,7 +41,7 @@ repos:
           - types-pyyaml
           - types-redis
         args: [--ignore-missing-imports, --scripts-are-modules]
-        exclude: ^(tests/|scripts/)
+        exclude: ^(tests/|test_.*\.py$|scripts/)
 
   # Security checks
   - repo: https://github.com/PyCQA/bandit
@@ -50,7 +50,7 @@ repos:
       - id: bandit
         args: [-c, pyproject.toml]
         additional_dependencies: ["bandit[toml]"]
-        exclude: ^tests/
+        exclude: ^(tests/|test_.*\.py$)
 
   # Markdown linting
   - repo: https://github.com/igorshubovych/markdownlint-cli

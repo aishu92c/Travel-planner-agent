@@ -1,0 +1,363 @@
+# ============================================================================
+# Development Environment Configuration
+# ============================================================================
+# Optimized for local development with relaxed limits and verbose logging
+# ============================================================================
+
+environment: development
+debug: true
+
+# ----------------------------------------------------------------------------
+# Application
+# ----------------------------------------------------------------------------
+application:
+  name: "LangGraph AWS Template (Dev)"
+  version: "0.1.0-dev"
+
+# ----------------------------------------------------------------------------
+# AWS Resources
+# ----------------------------------------------------------------------------
+aws:
+  region: us-east-1
+  account_id: null  # Auto-detected
+
+  # Bedrock
+  bedrock:
+    model_id: "anthropic.claude-3-5-sonnet-20241022-v2:0"
+    runtime_region: us-east-1
+
+  # DynamoDB Tables (dev suffix to avoid conflicts)
+  dynamodb:
+    endpoint_url: null  # Use http://localhost:8000 for local DynamoDB
+    tables:
+      agents: "langgraph-agents-dev"
+      checkpoints: "langgraph-checkpoints-dev"
+      cache: "langgraph-cache-dev"
+    billing_mode: "PAY_PER_REQUEST"
+    read_capacity: 5
+    write_capacity: 5
+
+  # S3 Buckets
+  s3:
+    buckets:
+      artifacts: "langgraph-artifacts-dev"
+      documents: "langgraph-documents-dev"
+    endpoint_url: null  # Use http://localhost:4566 for LocalStack
+
+  # Secrets Manager
+  secrets:
+    prefix: "langgraph/dev/"
+
+# ----------------------------------------------------------------------------
+# API Configuration
+# ----------------------------------------------------------------------------
+api:
+  host: "0.0.0.0"
+  port: 8000
+  workers: 2  # Lower for dev
+  reload: true  # Auto-reload on code changes
+
+  # CORS - Permissive for development
+  cors:
+    origins:
+      - "http://localhost:3000"
+      - "http://localhost:8000"
+      - "http://localhost:5173"  # Vite
+      - "http://127.0.0.1:3000"
+      - "http://127.0.0.1:8000"
+    allow_credentials: true
+    allow_methods: ["*"]
+    allow_headers: ["*"]
+
+  # Security - Relaxed for dev
+  security:
+    secret_key: "dev-secret-key-not-for-production-use-only"
+    api_key_header: "X-API-Key"
+    token_expiry_minutes: 1440  # 24 hours for dev
+
+  # Rate Limiting - Very relaxed
+  rate_limit:
+    enabled: false  # Disabled for development
+    requests_per_window: 10000
+    window_seconds: 60
+
+# ----------------------------------------------------------------------------
+# Database Configuration
+# ----------------------------------------------------------------------------
+database:
+  max_retries: 3
+  timeout_seconds: 30
+  connection_pool_size: 10
+
+# ----------------------------------------------------------------------------
+# Vector Database
+# ----------------------------------------------------------------------------
+vectordb:
+  provider: "faiss"  # Lightweight for local dev
+
+  # FAISS Settings
+  faiss:
+    index_path: "./data/dev/faiss_index"
+    index_type: "Flat"  # Simple for dev
+
+  # ChromaDB (alternative)
+  chromadb:
+    host: "localhost"
+    port: 8000
+    collection: "langgraph-dev"
+    persist_directory: "./data/dev/chroma"
+
+  # Embedding
+  embedding:
+    model: "amazon.titan-embed-text-v2:0"
+    dimension: 1024
+    batch_size: 10  # Small batches for dev
+
+  # Search
+  search:
+    top_k: 5
+    similarity_threshold: 0.6  # Lower threshold for testing
+    max_results: 20
+
+# ----------------------------------------------------------------------------
+# Cache Configuration
+# ----------------------------------------------------------------------------
+cache:
+  enabled: true
+  provider: "memory"  # In-memory for quick dev cycles
+
+  # Redis (if using)
+  redis:
+    host: "localhost"
+    port: 6379
+    db: 0
+    password: null
+    ssl: false
+    socket_timeout: 5
+    socket_connect_timeout: 5
+
+  # Cache Settings - Short TTL for dev
+  ttl:
+    default_seconds: 300  # 5 minutes
+    semantic_seconds: 600  # 10 minutes
+    exact_seconds: 1800  # 30 minutes
+
+  # Memory limits
+  max_memory_mb: 256  # Lower for dev
+  eviction_policy: "lru"
+
+  # Semantic Cache
+  semantic:
+    enabled: true
+    similarity_threshold: 0.95
+    embedding_cache_size: 1000
+
+# ----------------------------------------------------------------------------
+# LangGraph Configuration
+# ----------------------------------------------------------------------------
+langgraph:
+  # Checkpoint
+  checkpoint:
+    backend: "memory"  # In-memory for dev
+    namespace: "langgraph-dev"
+    retention_days: 7
+
+  # Execution Limits - Relaxed for dev
+  execution:
+    max_iterations: 50  # Higher for testing
+    max_execution_time_seconds: 600  # 10 minutes
+    max_concurrent_executions: 5
+    timeout_buffer_seconds: 30
+
+  # Streaming
+  streaming:
+    mode: "debug"  # Verbose output for dev
+    buffer_size: 1000
+    enable_intermediate_steps: true
+
+# ----------------------------------------------------------------------------
+# Agent Configuration
+# ----------------------------------------------------------------------------
+agent:
+  # Model Parameters - More creative for dev
+  model:
+    temperature: 0.7
+    max_tokens: 8192  # Higher for dev
+    top_p: 1.0
+    top_k: null
+
+  # Timeouts & Retries
+  timeouts:
+    llm_call_seconds: 120  # Generous timeout
+    tool_call_seconds: 60
+    total_seconds: 300
+
+  retries:
+    max_attempts: 5  # More retries for dev
+    initial_delay_seconds: 1.0
+    max_delay_seconds: 10.0
+    exponential_base: 2
+
+  # Context Management
+  context:
+    max_length_tokens: 150000  # Higher for dev/testing
+    truncation_strategy: "middle"
+
+  # Tools
+  tools:
+    max_iterations: 20  # More iterations for testing
+    timeout_seconds: 60
+    parallel_execution: true
+
+# ----------------------------------------------------------------------------
+# Observability Configuration
+# ----------------------------------------------------------------------------
+observability:
+  # Logging - Very verbose for development
+  logging:
+    level: "DEBUG"
+    format: "text"  # Human-readable
+    handlers:
+      - type: "console"
+        level: "DEBUG"
+      - type: "file"
+        level: "DEBUG"
+        path: "./logs/dev/app.log"
+        max_bytes: 10485760  # 10MB
+        backup_count: 3
+
+    # Structured logging
+    structured: false  # Simple text for dev
+    include_trace_id: true
+    include_timestamp: true
+
+  # Tracing
+  tracing:
+    enabled: true
+    provider: "console"  # Console output for dev
+    endpoint: null
+    sample_rate: 1.0  # 100% sampling
+    export_interval_seconds: 5
+
+  # Metrics
+  metrics:
+    enabled: true
+    provider: "prometheus"
+    port: 9090
+    path: "/metrics"
+    push_interval_seconds: 10
+
+    # Custom Metrics
+    custom:
+      agent_latency: true
+      cache_hit_rate: true
+      llm_token_usage: true
+      error_rate: true
+
+  # CloudWatch - Disabled for dev
+  cloudwatch:
+    enabled: false
+    log_group: "/aws/langgraph/dev"
+    log_stream_prefix: "dev-"
+
+# ----------------------------------------------------------------------------
+# Feature Flags
+# ----------------------------------------------------------------------------
+features:
+  # Core Features - All enabled for testing
+  rag:
+    enabled: true
+    max_documents: 10
+    chunk_size: 1000
+    chunk_overlap: 200
+
+  caching:
+    enabled: true
+    semantic_cache: true
+    exact_cache: true
+
+  streaming:
+    enabled: true
+    buffer_responses: false  # Stream immediately
+
+  # Advanced Features - All enabled for dev
+  multi_agent:
+    enabled: true
+    max_agents: 10
+    parallel_execution: true
+
+  tool_calling:
+    enabled: true
+    max_tools: 20
+    allow_dangerous_tools: true  # Allow in dev
+
+  human_in_loop:
+    enabled: true
+    timeout_seconds: 300
+
+  # Experimental Features - Enabled for testing
+  experimental:
+    query_rewriting: true
+    adaptive_retrieval: true
+    agent_memory: true
+    multi_modal: false
+
+# ----------------------------------------------------------------------------
+# Cost Optimization
+# ----------------------------------------------------------------------------
+cost_optimization:
+  # LLM Usage
+  llm:
+    use_cache: true
+    prefer_cheaper_models: false  # Use best models for dev
+    batch_requests: false  # No batching in dev
+    max_tokens_per_day: null  # No limit
+
+  # Infrastructure
+  infrastructure:
+    auto_scale: false
+    min_instances: 1
+    max_instances: 1
+    scale_down_delay_minutes: 5
+
+  # Storage
+  storage:
+    s3_lifecycle_enabled: false
+    dynamodb_on_demand: true
+    vector_db_replication: false
+
+# ----------------------------------------------------------------------------
+# Development Tools
+# ----------------------------------------------------------------------------
+development:
+  # Debug Tools
+  debug:
+    enable_profiler: true
+    enable_debugger: true
+    print_sql_queries: true
+    print_llm_prompts: true
+    print_llm_responses: true
+
+  # Hot Reload
+  hot_reload:
+    enabled: true
+    watch_paths:
+      - "./src"
+    ignore_paths:
+      - "./src/**/__pycache__"
+      - "./src/**/*.pyc"
+
+  # Mock Services
+  mocks:
+    use_mock_llm: false
+    use_mock_embeddings: false
+    use_mock_aws: false  # Set true for offline dev
+
+# ============================================================================
+# Notes:
+# - This config is optimized for local development
+# - Security is relaxed - DO NOT use in production
+# - All features enabled for comprehensive testing
+# - Verbose logging for debugging
+# - Lower resource limits for local machine
+# ============================================================================

@@ -1,0 +1,32 @@
+# Include base requirements
+-r requirements.txt
+
+# Testing (Python 3.13 compatible)
+pytest>=8.3.0
+pytest-cov>=6.0.0
+pytest-asyncio>=0.24.0
+pytest-timeout>=2.2.0
+
+# AWS Mocking
+moto[all]>=5.0.0
+
+# Code Quality
+black>=24.10.0
+ruff>=0.7.0
+mypy>=1.13.0
+pre-commit>=4.0.0
+
+# Type Stubs
+boto3-stubs[essential]>=1.35.0
+
+# Optional: Uncomment as needed
+# Interactive Development
+# ipython>=8.29.0
+# jupyter>=1.1.0
+
+# AWS CDK (for infrastructure)
+# aws-cdk-lib>=2.160.0
+# constructs>=10.3.0
+
+# Evaluation & Metrics
+# ragas>=0.2.0

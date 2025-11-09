@@ -1,0 +1,384 @@
+# ============================================================================
+# Staging Environment Configuration
+# ============================================================================
+# Pre-production environment that mirrors production with moderate limits
+# Used for integration testing and QA validation
+# ============================================================================
+
+environment: staging
+debug: false
+
+# ----------------------------------------------------------------------------
+# Application
+# ----------------------------------------------------------------------------
+application:
+  name: "LangGraph AWS Template (Staging)"
+  version: "0.1.0-staging"
+
+# ----------------------------------------------------------------------------
+# AWS Resources
+# ----------------------------------------------------------------------------
+aws:
+  region: us-east-1
+  account_id: null  # Auto-detected
+
+  # Bedrock
+  bedrock:
+    model_id: "anthropic.claude-3-5-sonnet-20241022-v2:0"
+    runtime_region: us-east-1
+
+  # DynamoDB Tables
+  dynamodb:
+    endpoint_url: null
+    tables:
+      agents: "langgraph-agents-staging"
+      checkpoints: "langgraph-checkpoints-staging"
+      cache: "langgraph-cache-staging"
+    billing_mode: "PAY_PER_REQUEST"
+    read_capacity: 10
+    write_capacity: 10
+
+  # S3 Buckets
+  s3:
+    buckets:
+      artifacts: "langgraph-artifacts-staging"
+      documents: "langgraph-documents-staging"
+    endpoint_url: null
+
+  # Secrets Manager
+  secrets:
+    prefix: "langgraph/staging/"
+
+# ----------------------------------------------------------------------------
+# API Configuration
+# ----------------------------------------------------------------------------
+api:
+  host: "0.0.0.0"
+  port: 8000
+  workers: 4  # Moderate for staging
+  reload: false
+
+  # CORS - Restricted to staging domains
+  cors:
+    origins:
+      - "https://staging.yourdomain.com"
+      - "https://staging-api.yourdomain.com"
+    allow_credentials: true
+    allow_methods: ["GET", "POST", "PUT", "DELETE", "PATCH"]
+    allow_headers: ["*"]
+
+  # Security
+  security:
+    secret_key: "${STAGING_SECRET_KEY}"  # From env var or Secrets Manager
+    api_key_header: "X-API-Key"
+    token_expiry_minutes: 120  # 2 hours
+
+  # Rate Limiting - Moderate
+  rate_limit:
+    enabled: true
+    requests_per_window: 500
+    window_seconds: 60
+    burst_size: 100
+
+# ----------------------------------------------------------------------------
+# Database Configuration
+# ----------------------------------------------------------------------------
+database:
+  max_retries: 5
+  timeout_seconds: 30
+  connection_pool_size: 20
+
+# ----------------------------------------------------------------------------
+# Vector Database
+# ----------------------------------------------------------------------------
+vectordb:
+  provider: "chromadb"
+
+  # FAISS (alternative)
+  faiss:
+    index_path: "./data/staging/faiss_index"
+    index_type: "IVFFlat"
+
+  # ChromaDB
+  chromadb:
+    host: "chromadb-staging.internal"
+    port: 8000
+    collection: "langgraph-staging"
+    persist_directory: null  # Use server-side persistence
+
+  # Embedding
+  embedding:
+    model: "amazon.titan-embed-text-v2:0"
+    dimension: 1024
+    batch_size: 50
+
+  # Search
+  search:
+    top_k: 5
+    similarity_threshold: 0.7
+    max_results: 50
+
+# ----------------------------------------------------------------------------
+# Cache Configuration
+# ----------------------------------------------------------------------------
+cache:
+  enabled: true
+  provider: "redis"
+
+  # Redis
+  redis:
+    host: "redis-staging.internal"
+    port: 6379
+    db: 0
+    password: "${REDIS_PASSWORD}"
+    ssl: true
+    socket_timeout: 10
+    socket_connect_timeout: 10
+    max_connections: 50
+
+  # Cache Settings
+  ttl:
+    default_seconds: 1800  # 30 minutes
+    semantic_seconds: 3600  # 1 hour
+    exact_seconds: 7200  # 2 hours
+
+  # Memory limits
+  max_memory_mb: 1024  # 1GB
+  eviction_policy: "allkeys-lru"
+
+  # Semantic Cache
+  semantic:
+    enabled: true
+    similarity_threshold: 0.95
+    embedding_cache_size: 10000
+
+# ----------------------------------------------------------------------------
+# LangGraph Configuration
+# ----------------------------------------------------------------------------
+langgraph:
+  # Checkpoint
+  checkpoint:
+    backend: "dynamodb"
+    namespace: "langgraph-staging"
+    retention_days: 30
+
+  # Execution Limits
+  execution:
+    max_iterations: 30
+    max_execution_time_seconds: 360  # 6 minutes
+    max_concurrent_executions: 20
+    timeout_buffer_seconds: 30
+
+  # Streaming
+  streaming:
+    mode: "values"
+    buffer_size: 5000
+    enable_intermediate_steps: false
+
+# ----------------------------------------------------------------------------
+# Agent Configuration
+# ----------------------------------------------------------------------------
+agent:
+  # Model Parameters
+  model:
+    temperature: 0.7
+    max_tokens: 4096
+    top_p: 1.0
+    top_k: null
+
+  # Timeouts & Retries
+  timeouts:
+    llm_call_seconds: 90
+    tool_call_seconds: 45
+    total_seconds: 240
+
+  retries:
+    max_attempts: 4
+    initial_delay_seconds: 1.0
+    max_delay_seconds: 8.0
+    exponential_base: 2
+
+  # Context Management
+  context:
+    max_length_tokens: 100000
+    truncation_strategy: "middle"
+
+  # Tools
+  tools:
+    max_iterations: 15
+    timeout_seconds: 45
+    parallel_execution: true
+
+# ----------------------------------------------------------------------------
+# Observability Configuration
+# ----------------------------------------------------------------------------
+observability:
+  # Logging
+  logging:
+    level: "INFO"
+    format: "json"
+    handlers:
+      - type: "console"
+        level: "INFO"
+      - type: "cloudwatch"
+        level: "INFO"
+        log_group: "/aws/langgraph/staging"
+
+    # Structured logging
+    structured: true
+    include_trace_id: true
+    include_timestamp: true
+    include_context: true
+
+  # Tracing
+  tracing:
+    enabled: true
+    provider: "opentelemetry"
+    endpoint: "http://otel-collector-staging:4318"
+    sample_rate: 1.0  # 100% for staging
+    export_interval_seconds: 10
+
+  # Metrics
+  metrics:
+    enabled: true
+    provider: "prometheus"
+    port: 9090
+    path: "/metrics"
+    push_interval_seconds: 15
+
+    # Custom Metrics
+    custom:
+      agent_latency: true
+      cache_hit_rate: true
+      llm_token_usage: true
+      error_rate: true
+      request_duration: true
+      queue_depth: true
+
+  # CloudWatch
+  cloudwatch:
+    enabled: true
+    log_group: "/aws/langgraph/staging"
+    log_stream_prefix: "staging-"
+    retention_days: 30
+
+# ----------------------------------------------------------------------------
+# Feature Flags
+# ----------------------------------------------------------------------------
+features:
+  # Core Features
+  rag:
+    enabled: true
+    max_documents: 10
+    chunk_size: 1000
+    chunk_overlap: 200
+
+  caching:
+    enabled: true
+    semantic_cache: true
+    exact_cache: true
+
+  streaming:
+    enabled: true
+    buffer_responses: true
+
+  # Advanced Features
+  multi_agent:
+    enabled: true
+    max_agents: 5
+    parallel_execution: true
+
+  tool_calling:
+    enabled: true
+    max_tools: 15
+    allow_dangerous_tools: false
+
+  human_in_loop:
+    enabled: true
+    timeout_seconds: 600
+
+  # Experimental Features - Limited testing
+  experimental:
+    query_rewriting: true
+    adaptive_retrieval: true
+    agent_memory: false
+    multi_modal: false
+
+# ----------------------------------------------------------------------------
+# Cost Optimization
+# ----------------------------------------------------------------------------
+cost_optimization:
+  # LLM Usage
+  llm:
+    use_cache: true
+    prefer_cheaper_models: false
+    batch_requests: true
+    max_tokens_per_day: 10000000  # 10M tokens/day
+
+  # Infrastructure
+  infrastructure:
+    auto_scale: true
+    min_instances: 2
+    max_instances: 10
+    scale_down_delay_minutes: 10
+    target_cpu_utilization: 70
+
+  # Storage
+  storage:
+    s3_lifecycle_enabled: true
+    s3_transition_days: 30  # Move to IA after 30 days
+    s3_expiration_days: 90  # Delete after 90 days
+    dynamodb_on_demand: true
+    vector_db_replication: false
+
+# ----------------------------------------------------------------------------
+# Alerts & Monitoring
+# ----------------------------------------------------------------------------
+alerts:
+  # Error Alerts
+  errors:
+    enabled: true
+    threshold_percentage: 5  # Alert if error rate > 5%
+    window_minutes: 5
+    channels:
+      - type: "email"
+        recipients: ["staging-alerts@yourdomain.com"]
+      - type: "slack"
+        webhook: "${SLACK_WEBHOOK_STAGING}"
+
+  # Performance Alerts
+  performance:
+    enabled: true
+    latency_threshold_ms: 5000  # Alert if p95 > 5s
+    window_minutes: 10
+
+  # Cost Alerts
+  cost:
+    enabled: true
+    daily_budget_usd: 100
+    alert_threshold_percentage: 80
+
+# ----------------------------------------------------------------------------
+# Testing Configuration
+# ----------------------------------------------------------------------------
+testing:
+  # Load Testing
+  load_test:
+    enabled: true
+    max_concurrent_users: 100
+    ramp_up_seconds: 60
+
+  # Integration Tests
+  integration:
+    enabled: true
+    run_on_deploy: true
+    timeout_seconds: 600
+
+# ============================================================================
+# Notes:
+# - Staging mirrors production configuration
+# - All monitoring and tracing enabled
+# - Moderate resource limits for cost control
+# - Used for pre-production validation
+# - Data retained for 30 days
+# ============================================================================

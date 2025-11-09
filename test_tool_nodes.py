@@ -1,53 +1,3 @@
-            duration=10,
-            budget_breakdown={
-                "flights": 1200.0,
-                "accommodation": 1050.0,
-                "activities": 450.0,
-                "food": 300.0,
-            }
-        )
-
-        result = search_flights_node(state)
-
-        # Check all required keys
-        required_keys = {"flights", "selected_flight", "error_message"}
-        assert all(key in result for key in required_keys)
-
-        # Check types
-        assert isinstance(result["flights"], list)
-        assert result["selected_flight"] is None or isinstance(result["selected_flight"], dict)
-        assert result["error_message"] is None or isinstance(result["error_message"], str)
-
-    def test_hotels_result_structure(self):
-        """Test hotel result has all required fields."""
-        state = AgentState(
-            destination="Paris",
-            start_date="2024-06-01",
-            end_date="2024-06-10",
-            budget=3000.0,
-            duration=10,
-            budget_breakdown={
-                "flights": 1200.0,
-                "accommodation": 1050.0,
-                "activities": 450.0,
-                "food": 300.0,
-            }
-        )
-
-        result = search_hotels_node(state)
-
-        # Check all required keys
-        required_keys = {"hotels", "selected_hotel", "error_message"}
-        assert all(key in result for key in required_keys)
-
-        # Check types
-        assert isinstance(result["hotels"], list)
-        assert result["selected_hotel"] is None or isinstance(result["selected_hotel"], dict)
-        assert result["error_message"] is None or isinstance(result["error_message"], str)
-
-
-if __name__ == "__main__":
-    pytest.main([__file__, "-v"])
 """Test suite for tool nodes (flight and hotel search and selection).
 
 Tests the search_flights_node and search_hotels_node functions with various
@@ -427,4 +377,54 @@ class TestResultStructure:
             start_date="2024-06-01",
             end_date="2024-06-10",
             budget=3000.0,
+            duration=10,
+            budget_breakdown={
+                "flights": 1200.0,
+                "accommodation": 1050.0,
+                "activities": 450.0,
+                "food": 300.0,
+            }
+        )
+
+        result = search_flights_node(state)
+
+        # Check all required keys
+        required_keys = {"flights", "selected_flight", "error_message"}
+        assert all(key in result for key in required_keys)
+
+        # Check types
+        assert isinstance(result["flights"], list)
+        assert result["selected_flight"] is None or isinstance(result["selected_flight"], dict)
+        assert result["error_message"] is None or isinstance(result["error_message"], str)
+
+    def test_hotels_result_structure(self):
+        """Test hotel result has all required fields."""
+        state = AgentState(
+            destination="Paris",
+            start_date="2024-06-01",
+            end_date="2024-06-10",
+            budget=3000.0,
+            duration=10,
+            budget_breakdown={
+                "flights": 1200.0,
+                "accommodation": 1050.0,
+                "activities": 450.0,
+                "food": 300.0,
+            }
+        )
+
+        result = search_hotels_node(state)
+
+        # Check all required keys
+        required_keys = {"hotels", "selected_hotel", "error_message"}
+        assert all(key in result for key in required_keys)
+
+        # Check types
+        assert isinstance(result["hotels"], list)
+        assert result["selected_hotel"] is None or isinstance(result["selected_hotel"], dict)
+        assert result["error_message"] is None or isinstance(result["error_message"], str)
+
+
+if __name__ == "__main__":
+    pytest.main([__file__, "-v"])
 

@@ -116,7 +116,7 @@ class APISettings(BaseSettings):
         description="Header name for API key authentication",
     )
     secret_key: str = Field(
-        default="change-me-in-production",
+        default="change-me-in-production-with-secure-key",
         min_length=32,
         description="Secret key for JWT signing (MUST change in production)",
     )
@@ -494,6 +494,118 @@ class ObservabilitySettings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="OBSERVABILITY_")
 
 
+class LLMSettings(BaseSettings):
+    """Language Model configuration for LLM calls.
+
+    This class manages LLM-specific settings including API keys, model names,
+    and generation parameters.
+    """
+
+    # API Keys
+    openai_api_key: str | None = Field(
+        default=None,
+        description="OpenAI API key (required for OpenAI models)",
+    )
+    langsmith_api_key: str | None = Field(
+        default=None,
+        description="LangSmith API key (optional, for debugging)",
+    )
+    anthropic_api_key: str | None = Field(
+        default=None,
+        description="Anthropic API key (for Claude models)",
+    )
+
+    # Model Configuration
+    model_name: str = Field(
+        default="gpt-4-turbo-preview",
+        description="Model name to use for LLM calls",
+    )
+    temperature: float = Field(
+        default=0.7,
+        ge=0.0,
+        le=2.0,
+        description="Temperature for generation (0.0-2.0)",
+    )
+    max_tokens: int = Field(
+        default=2000,
+        ge=1,
+        le=200000,
+        description="Maximum tokens in response",
+    )
+    top_p: float = Field(
+        default=1.0,
+        ge=0.0,
+        le=1.0,
+        description="Top-p sampling parameter",
+    )
+    frequency_penalty: float = Field(
+        default=0.0,
+        ge=-2.0,
+        le=2.0,
+        description="Frequency penalty for repeated tokens",
+    )
+    presence_penalty: float = Field(
+        default=0.0,
+        ge=-2.0,
+        le=2.0,
+        description="Presence penalty for token diversity",
+    )
+
+    # Application Settings
+    log_level: str = Field(
+        default="INFO",
+        description="Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)",
+    )
+    log_format: str = Field(
+        default="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+        description="Logging format string",
+    )
+
+    # Cache Configuration (for Phase 4)
+    cache_enabled: bool = Field(
+        default=False,
+        description="Enable response caching",
+    )
+    cache_ttl: int = Field(
+        default=3600,
+        ge=0,
+        description="Cache time-to-live in seconds",
+    )
+
+    # Cost Tracking (for Phase 2)
+    track_token_usage: bool = Field(
+        default=True,
+        description="Track and log token usage for cost monitoring",
+    )
+
+    # Timeouts & Retries
+    timeout_seconds: int = Field(
+        default=60,
+        ge=1,
+        description="Timeout for LLM calls",
+    )
+    max_retries: int = Field(
+        default=3,
+        ge=0,
+        description="Maximum retry attempts",
+    )
+
+    @field_validator("openai_api_key")
+    @classmethod
+    def validate_openai_key(cls, v: str | None, info: ValidationInfo) -> str | None:
+        """Validate that OpenAI API key is set if using OpenAI models."""
+        if info.data and "model_name" in info.data:
+            model_name = str(info.data.get("model_name", "")).lower()
+            if "gpt" in model_name and not v:
+                raise ValueError(
+                    "OPENAI_API_KEY is required when using GPT models. "
+                    "Set it in .env file: OPENAI_API_KEY=sk-..."
+                )
+        return v
+
+    model_config = SettingsConfigDict(env_prefix="LLM_")
+
+
 class FeatureFlags(BaseSettings):
     """Feature flags for enabling/disabling features."""
 
@@ -659,3 +771,151 @@ def reload_settings() -> Settings:
     """
     get_settings.cache_clear()
     return get_settings()
+
+
+# ============================================================================
+# LLM FACTORY FUNCTIONS
+# ============================================================================
+
+def get_llm(settings: Settings | None = None):
+    """Get configured ChatOpenAI instance.
+
+    This function creates and returns a ChatOpenAI instance configured with
+    the settings from environment variables or the provided Settings object.
+
+    Args:
+        settings: Optional Settings instance. If not provided, uses get_settings()
+
+    Returns:
+        ChatOpenAI: Configured language model instance
+
+    Raises:
+        ValueError: If OPENAI_API_KEY is not set
+        ImportError: If langchain_openai is not installed
+
+    Example:
+        >>> from src.config import get_llm
+        >>> llm = get_llm()
+        >>> response = llm.invoke("What is the capital of France?")
+        >>> print(response.content)
+    """
+    import logging
+
+    # Get settings if not provided
+    if settings is None:
+        settings = get_settings()
+
+    logger = logging.getLogger(__name__)
+
+    logger.info("Initializing LLM configuration")
+    logger.debug(f"Model: {settings.llm.model_name}")
+    logger.debug(f"Temperature: {settings.llm.temperature}")
+    logger.debug(f"Max tokens: {settings.llm.max_tokens}")
+
+    # Validate OpenAI API key
+    if not settings.llm.openai_api_key:
+        error_msg = (
+            "OPENAI_API_KEY is not set. "
+            "Please set it in your .env file: OPENAI_API_KEY=sk-... "
+            "or as an environment variable."
+        )
+        logger.error(error_msg)
+        raise ValueError(error_msg)
+
+    # Try to import ChatOpenAI
+    try:
+        from langchain_openai import ChatOpenAI
+    except ImportError as e:
+        error_msg = (
+            "langchain_openai is not installed. "
+            "Install it with: pip install langchain-openai"
+        )
+        logger.error(error_msg)
+        raise ImportError(error_msg) from e
+
+    # Create ChatOpenAI instance with configured settings
+    logger.info(f"Creating ChatOpenAI instance with model: {settings.llm.model_name}")
+
+    try:
+        llm = ChatOpenAI(
+            model=settings.llm.model_name,
+            api_key=settings.llm.openai_api_key,
+            temperature=settings.llm.temperature,
+            max_tokens=settings.llm.max_tokens,
+            top_p=settings.llm.top_p,
+            frequency_penalty=settings.llm.frequency_penalty,
+            presence_penalty=settings.llm.presence_penalty,
+            timeout=settings.llm.timeout_seconds,
+            max_retries=settings.llm.max_retries,
+        )
+
+        logger.info(f"✓ LLM initialized successfully: {settings.llm.model_name}")
+        logger.debug(f"Cache enabled: {settings.llm.cache_enabled}")
+        logger.debug(f"Token tracking enabled: {settings.llm.track_token_usage}")
+
+        return llm
+
+    except Exception as e:
+        logger.error(f"Failed to initialize LLM: {str(e)}")
+        raise
+
+
+def validate_llm_settings(settings: Settings | None = None) -> bool:
+    """Validate LLM configuration settings.
+
+    This function checks that all required LLM settings are properly configured
+    and that the necessary API keys are available.
+
+    Args:
+        settings: Optional Settings instance. If not provided, uses get_settings()
+
+    Returns:
+        bool: True if all settings are valid
+
+    Raises:
+        ValueError: If any required settings are missing or invalid
+
+    Example:
+        >>> from src.config import validate_llm_settings
+        >>> if validate_llm_settings():
+        ...     print("LLM settings are valid")
+    """
+    import logging
+
+    if settings is None:
+        settings = get_settings()
+
+    logger = logging.getLogger(__name__)
+    errors = []
+
+    # Check OpenAI API key
+    if not settings.llm.openai_api_key:
+        errors.append("OPENAI_API_KEY is not set")
+    else:
+        if not settings.llm.openai_api_key.startswith("sk-"):
+            errors.append("OPENAI_API_KEY should start with 'sk-'")
+
+    # Check model name
+    if not settings.llm.model_name:
+        errors.append("model_name is not set")
+
+    # Check temperature range
+    if not (0.0 <= settings.llm.temperature <= 2.0):
+        errors.append(f"Temperature must be between 0.0 and 2.0, got {settings.llm.temperature}")
+
+    # Check max_tokens
+    if settings.llm.max_tokens < 1:
+        errors.append(f"max_tokens must be at least 1, got {settings.llm.max_tokens}")
+
+    # Check cache settings
+    if settings.llm.cache_enabled and settings.llm.cache_ttl <= 0:
+        errors.append("cache_ttl must be greater than 0 if caching is enabled")
+
+    if errors:
+        error_msg = "LLM settings validation failed:\n" + "\n".join(f"  • {e}" for e in errors)
+        logger.error(error_msg)
+        raise ValueError(error_msg)
+
+    logger.info("✓ LLM settings validation passed")
+    return True
+

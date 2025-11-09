@@ -166,6 +166,7 @@ markers = [
     "integration: Integration tests",
     "slow: Slow-running tests",
     "aws: Tests requiring AWS services",
+    "timeout: Tests with timeout limits",
 ]
 
 [tool.coverage.run]

@@ -15,7 +15,7 @@ from datetime import datetime
 from enum import Enum
 from typing import Any
 
-from pydantic import BaseModel, Field, field_validator, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator, ConfigDict
 
 
 class MessageRole(str, Enum):
@@ -180,6 +180,66 @@ class AgentState(BaseModel):
     next_agent: str | None = Field(
         default=None,
         description="Next agent to route to (for multi-agent)",
+    )
+    # Travel Planner specific fields
+    destination: str | None = Field(
+        default=None,
+        description="Travel destination",
+    )
+    start_date: str | None = Field(
+        default=None,
+        description="Trip start date (ISO format)",
+    )
+    end_date: str | None = Field(
+        default=None,
+        description="Trip end date (ISO format)",
+    )
+    budget: float = Field(
+        default=0.0,
+        ge=0,
+        description="Budget for the trip",
+    )
+    duration: int = Field(
+        default=0,
+        ge=0,
+        le=30,
+        description="Trip duration in days (1-30)",
+    )
+    flights: list[dict[str, Any]] = Field(
+        default_factory=list,
+        description="List of available flight options",
+    )
+    hotels: list[dict[str, Any]] = Field(
+        default_factory=list,
+        description="List of available hotel options",
+    )
+    activities: list[dict[str, Any]] = Field(
+        default_factory=list,
+        description="List of available activities/attractions",
+    )
+    itinerary: list[dict[str, Any]] = Field(
+        default_factory=list,
+        description="Final travel itinerary",
+    )
+    error_message: str | None = Field(
+        default=None,
+        description="Error message if planning failed",
+    )
+    budget_feasible: bool = Field(
+        default=False,
+        description="Whether the trip is feasible within budget",
+    )
+    budget_breakdown: dict[str, float] = Field(
+        default_factory=dict,
+        description="Cost breakdown by category (flights, hotels, activities, etc.)",
+    )
+    selected_flight: dict[str, Any] | None = Field(
+        default=None,
+        description="The selected flight option",
+    )
+    selected_hotel: dict[str, Any] | None = Field(
+        default=None,
+        description="The selected hotel option",
     )
 
     @field_validator("iteration_count")
@@ -404,6 +464,86 @@ class ToolOutput(BaseModel):
         }
 
 
+
+
+class TravelPlannerInput(BaseModel):
+    """Pydantic model for travel planner input validation.
+
+    This model validates user input for travel planning with:
+    - Budget must be greater than 0
+    - Duration must be between 1 and 30 days
+    - Required fields for destination and dates
+
+    Example:
+        >>> planner_input = TravelPlannerInput(
+        ...     destination="Paris",
+        ...     start_date="2024-06-01",
+        ...     end_date="2024-06-10",
+        ...     budget=5000.0,
+        ...     duration=10,
+        ...     user_preferences={"hotel_rating": 4}
+        ... )
+    """
+
+    destination: str = Field(
+        description="Travel destination",
+        min_length=1,
+    )
+    start_date: str = Field(
+        description="Trip start date (ISO format: YYYY-MM-DD)",
+        min_length=10,
+    )
+    end_date: str = Field(
+        description="Trip end date (ISO format: YYYY-MM-DD)",
+        min_length=10,
+    )
+    budget: float = Field(
+        description="Budget for the trip in USD",
+        gt=0,  # Must be greater than 0
+    )
+    duration: int = Field(
+        description="Trip duration in days",
+        ge=1,
+        le=30,  # Must be between 1 and 30
+    )
+    user_preferences: dict[str, Any] | None = Field(
+        default=None,
+        description="Optional user preferences (hotel rating, activities, etc.)",
+    )
+
+    @field_validator("budget")
+    @classmethod
+    def validate_budget(cls, v: float) -> float:
+        """Ensure budget is positive."""
+        if v <= 0:
+            raise ValueError("Budget must be greater than 0")
+        return v
+
+    @field_validator("duration")
+    @classmethod
+    def validate_duration(cls, v: int) -> int:
+        """Ensure duration is between 1 and 30 days."""
+        if not (1 <= v <= 30):
+            raise ValueError("Duration must be between 1 and 30 days")
+        return v
+
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "destination": "Paris",
+                "start_date": "2024-06-01",
+                "end_date": "2024-06-10",
+                "budget": 5000.0,
+                "duration": 10,
+                "user_preferences": {
+                    "hotel_rating": 4,
+                    "flight_preference": "direct",
+                    "activities": ["museums", "restaurants"],
+                },
+            }
+        }
+
+
 class AgentDecision(BaseModel):
     """Represents an agent's decision at a routing point.
 
@@ -454,5 +594,6 @@ __all__ = [
     "ToolInput",
     "ToolStatus",
     "ToolOutput",
+    "TravelPlannerInput",
     "AgentDecision",
 ]

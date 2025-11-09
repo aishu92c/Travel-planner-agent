@@ -32,22 +32,26 @@ Example:
 """
 
 # AWS Helpers
-from .aws_helpers import (
-    AWSCredentialsError,
-    AWSError,
-    AWSServiceError,
-    check_aws_credentials,
-    get_aws_account_id,
-    get_bedrock_agent_client,
-    get_bedrock_client,
-    get_boto3_client,
-    get_dynamodb_resource,
-    get_dynamodb_table,
-    get_s3_bucket,
-    get_s3_resource,
-    get_secret,
-    put_secret,
-)
+try:
+    from .aws_helpers import (
+        AWSCredentialsError,
+        AWSError,
+        AWSServiceError,
+        check_aws_credentials,
+        get_aws_account_id,
+        get_bedrock_agent_client,
+        get_bedrock_client,
+        get_boto3_client,
+        get_dynamodb_resource,
+        get_dynamodb_table,
+        get_s3_bucket,
+        get_s3_resource,
+        get_secret,
+        put_secret,
+    )
+except (ImportError, ModuleNotFoundError):
+    # AWS helpers are optional - may not have AWS configured
+    pass
 
 # Retry Utilities
 from .retry import (
@@ -69,12 +73,22 @@ from .validators import (
     validate_s3_uri,
 )
 
-# Future imports will go here when modules are created
-# Example:
-# from .retry import retry_with_backoff
-# from .text import clean_text, truncate_text
-# from .datetime_utils import format_timestamp, parse_date
-# from .validators import validate_email, validate_url
+# Logging Utilities
+from .logger import (
+    get_node_logger,
+    get_tool_logger,
+    log_execution_time,
+    log_llm_call,
+    log_state_transition,
+    log_tool_call,
+    setup_logging,
+)
+
+# Visualization Utilities
+try:
+    from .visualize import generate_graph_visualization, print_graph_structure
+except ImportError:
+    pass
 
 __all__ = [
     # AWS Helpers
@@ -106,5 +120,18 @@ __all__ = [
     "validate_query_length",
     "sanitize_input",
     "validate_json_schema",
-    # Future exports will be added here as modules are created
+    # Logging Utilities
+    "configure_logging",
+    "get_node_logger",
+    "get_tool_logger",
+    "log_execution_time",
+    "log_section",
+    "log_state_transition",
+    "log_tool_call",
+    "log_llm_call",
+    "log_error_with_context",
+    "PerformanceLogger",
+    # Visualization Utilities
+    "generate_graph_visualization",
+    "print_graph_structure",
 ]

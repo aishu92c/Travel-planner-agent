@@ -1,0 +1,315 @@
+# ============================================================================
+# REGION KEYWORDS (Key Destinations)
+# ============================================================================
+
+# ASIA ($100/day)
+asia_keywords = ['tokyo', 'bangkok', 'singapore', 'hong kong', 'bali',
+                 'dubai', 'india', 'china', 'vietnam', 'korea']
+
+# EUROPE ($150/day)
+europe_keywords = ['paris', 'london', 'rome', 'berlin', 'madrid', 'amsterdam',
+                   'barcelona', 'prague', 'vienna', 'istanbul']
+
+# AMERICAS ($120/day)
+americas_keywords = ['new york', 'los angeles', 'toronto', 'mexico city',
+                     'buenos aires', 'vancouver', 'usa', 'canada']
+
+# AFRICA ($110/day)
+africa_keywords = ['cairo', 'cape town', 'marrakech', 'johannesburg']
+
+# OCEANIA ($130/day)
+oceania_keywords = ['sydney', 'auckland', 'fiji', 'australia']
+
+
+# ============================================================================
+# FORMULAS
+# ============================================================================
+
+# Minimum Required Budget
+minimum_total = minimum_per_day × duration
+
+# Feasibility
+feasible = (total_budget >= minimum_total)
+
+# Budget per Day (average)
+per_day = total_budget / duration
+
+# Category Budget
+category_amount = total_budget × category_percentage
+
+# Surplus/Deficit
+surplus = total_budget - minimum_total
+deficit = minimum_total - total_budget
+
+# Daily Budget by Category
+flights_per_day = flights_total / duration
+hotel_per_night = accommodation_total / duration
+
+
+# ============================================================================
+# ERROR HANDLING
+# ============================================================================
+
+try:
+    result = budget_analysis_node(state)
+except ValueError as e:
+    if "Budget cannot be negative" in str(e):
+        print("Error: Budget must be positive")
+    elif "Duration must be positive" in str(e):
+        print("Error: Duration must be at least 1 day")
+
+
+# ============================================================================
+# LOGGING
+# ============================================================================
+
+import logging
+
+# Enable logging to see detailed analysis
+logging.basicConfig(level=logging.INFO)
+
+# Log levels:
+# - INFO: Main steps and results
+# - DEBUG: Region identification details
+# - WARNING: Infeasible budgets, unknown destinations
+
+
+# ============================================================================
+# EXAMPLES BY DESTINATION
+# ============================================================================
+
+examples = [
+    # (destination, budget, duration, feasible?)
+    ("Paris", 2000, 10, True),         # Europe: 1500 min
+    ("Tokyo", 500, 7, False),          # Asia: 700 min
+    ("New York", 1500, 10, True),      # Americas: 1200 min
+    ("Bangkok", 1000, 14, False),      # Asia: 1400 min
+    ("Barcelona", 1800, 12, True),     # Europe: 1800 min
+]
+
+for dest, budget, days, expected_feasible in examples:
+    state = AgentState(destination=dest, budget=budget, duration=days)
+    result = budget_analysis_node(state)
+    actual = result['budget_feasible']
+    assert actual == expected_feasible, f"{dest}: expected {expected_feasible}, got {actual}"
+
+
+# ============================================================================
+# QUICK TIPS
+# ============================================================================
+
+# TIP 1: Always validate input with TravelPlannerInput first
+from src.agents.state import TravelPlannerInput
+user_input = TravelPlannerInput(destination="Paris", budget=3000, duration=10)
+state = AgentState(**user_input.dict())
+
+# TIP 2: Use budget_breakdown for detailed planning
+for category, amount in result['budget_breakdown'].items():
+    print(f"{category}: ${amount:.2f}")
+
+# TIP 3: Handle unknown destinations
+if result['region'] == 'asia' and 'Asia' not in state.destination:
+    print("Warning: Destination not recognized, using Asia rates")
+
+# TIP 4: Log important decisions
+import logging
+logger = logging.getLogger(__name__)
+if result['budget_feasible']:
+    logger.info(f"Trip feasible: {result['analysis_summary']}")
+
+# TIP 5: Use minimum_required_budget for alternative suggestions
+if not result['budget_feasible']:
+    deficit = result['minimum_required_budget'] - state.budget
+    print(f"Suggestion: Add ${deficit:.2f} or reduce duration to {max_days} days")
+
+
+# ============================================================================
+# TROUBLESHOOTING
+# ============================================================================
+
+# Issue: Wrong region identified
+# Solution: Update REGION_KEYWORDS in planning_nodes.py
+# REGION_KEYWORDS['europe'].append('my_destination')
+
+# Issue: Budget always infeasible
+# Solution: Check MINIMUM_BUDGET_PER_DAY values
+# Maybe your region's minimum is too high
+
+# Issue: No logging output
+# Solution: Configure logging
+# import logging
+# logging.basicConfig(level=logging.INFO)
+
+# Issue: Import error
+# Solution: Ensure src/nodes/ directory exists
+# ls -la src/nodes/
+
+# Issue: AgentState error
+# Solution: Check all required fields
+# state = AgentState(
+#     destination="...",
+#     budget=...,
+#     duration=...,
+# )
+
+
+# ============================================================================
+# CHEAT SHEET - ONE-LINER CHECKS
+# ============================================================================
+
+# Is trip feasible?
+result['budget_feasible']
+
+# How much extra budget?
+result['budget_feasible'] and result['budget_breakdown']['flights'] + ...
+
+# How many days can I afford?
+int(state.budget / result['minimum_per_day'])
+
+# What's the cheapest region?
+min(MINIMUM_BUDGET_PER_DAY.values())  # Returns 100 (Asia)
+
+# What region is this destination?
+result['region']
+
+# How much for flights?
+result['budget_breakdown']['flights']
+
+# Budget per day by category?
+{k: v/state.duration for k, v in result['budget_breakdown'].items()}
+
+# Deficit amount?
+not result['budget_feasible'] and (result['minimum_required_budget'] - state.budget)
+
+
+# ============================================================================
+# REFERENCE TABLE
+# ============================================================================
+
+"""
+REGION COMPARISON - 10-Day Trip
+
+Region          Min/Day  Total Min  Example Dests
+─────────────────────────────────────────────────
+Asia            $100     $1,000     Bangkok, Tokyo, Bali
+Africa          $110     $1,100     Cairo, Cape Town
+Americas        $120     $1,200     NYC, Toronto
+Oceania         $130     $1,300     Sydney, Auckland
+Europe          $150     $1,500     Paris, London, Rome
+
+FEASIBILITY TABLE - $1500 Budget
+
+Days    Asia     Europe   Americas Feasible?
+────────────────────────────────────────
+7       $700     $1,050   $840     Yes (all)
+10      $1,000   $1,500   $1,200   Europe: Equal
+14      $1,400   $2,100   $1,680   Only Asia
+20      $2,000   $3,000   $2,400   None
+
+BUDGET BREAKDOWN - $3000 Budget
+
+Category        Percentage  Amount
+─────────────────────────────────
+Flights         40%         $1,200
+Accommodation   35%         $1,050
+Activities      15%         $450
+Food            10%         $300
+─────────────────────────────────
+Total           100%        $3,000
+"""
+"""
+QUICK REFERENCE CARD - Budget Analysis Node
+============================================
+
+One-page reference for using budget_analysis_node
+"""
+
+# ============================================================================
+# QUICK IMPORT & USAGE
+# ============================================================================
+
+from src.agents.state import AgentState
+from src.nodes.planning_nodes import budget_analysis_node
+
+# Create state
+state = AgentState(destination="Paris", budget=3000.0, duration=10)
+
+# Analyze budget
+result = budget_analysis_node(state)
+
+# Check results
+if result['budget_feasible']:
+    print("✓ Budget OK")
+    print(f"  Breakdown: {result['budget_breakdown']}")
+else:
+    print("✗ Budget insufficient")
+    print(f"  Deficit: ${result['minimum_required_budget'] - state.budget:.2f}")
+
+
+# ============================================================================
+# KEY CONSTANTS
+# ============================================================================
+
+# Budget Allocation (% of total)
+FLIGHTS = 40%        # $1200 for $3000 budget
+ACCOMMODATION = 35%  # $1050 for $3000 budget
+ACTIVITIES = 15%     # $450 for $3000 budget
+FOOD = 10%           # $300 for $3000 budget
+
+# Minimum Daily Budgets by Region
+REGION_MINIMUMS = {
+    'asia': $100/day,      # Tokyo, Bangkok, Singapore, Bali, etc.
+    'europe': $150/day,    # Paris, London, Rome, Berlin, etc.
+    'americas': $120/day,  # New York, Toronto, Mexico City, etc.
+    'africa': $110/day,    # Cairo, Cape Town, Marrakech, etc.
+    'oceania': $130/day,   # Sydney, Auckland, etc.
+}
+
+
+# ============================================================================
+# RETURN VALUE STRUCTURE
+# ============================================================================
+
+result = {
+    'budget_breakdown': {
+        'flights': 1200.0,
+        'accommodation': 1050.0,
+        'activities': 450.0,
+        'food': 300.0,
+    },
+    'budget_feasible': True,           # True if budget >= minimum
+    'minimum_required_budget': 1500.0, # Total minimum needed
+    'analysis_summary': "...",         # Human-readable text
+    'region': 'europe',                # Identified region
+    'minimum_per_day': 150,            # Daily minimum for region
+}
+
+
+# ============================================================================
+# COMMON SCENARIOS
+# ============================================================================
+
+# SCENARIO 1: Check Feasibility
+if result['budget_feasible']:
+    # Proceed with planning
+    state.budget_breakdown = result['budget_breakdown']
+    state.budget_feasible = True
+else:
+    # Handle insufficient budget
+    deficit = result['minimum_required_budget'] - state.budget
+    state.error_message = f"Need ${deficit:.2f} more"
+
+# SCENARIO 2: Find Maximum Duration
+max_days = int(state.budget / result['minimum_per_day'])
+
+# SCENARIO 3: Find Cheapest Destination
+# Compare same budget across different regions:
+# Asia: 10 days, Europe: 6.67 days, Americas: 8.33 days
+
+# SCENARIO 4: Budget Adjustment
+if not result['budget_feasible']:
+    suggested_budget = result['minimum_required_budget']
+    suggested_duration = int(state.budget / result['minimum_per_day'])
+
+
+

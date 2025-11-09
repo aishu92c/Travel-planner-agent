@@ -25,11 +25,14 @@ from .settings import (
     DatabaseSettings,
     FeatureFlags,
     LangGraphSettings,
+    LLMSettings,
     ObservabilitySettings,
     Settings,
     VectorDBSettings,
+    get_llm,
     get_settings,
     reload_settings,
+    validate_llm_settings,
 )
 
 __all__ = [
@@ -45,6 +48,10 @@ __all__ = [
     "CacheSettings",
     "LangGraphSettings",
     "AgentSettings",
+    "LLMSettings",
     "ObservabilitySettings",
     "FeatureFlags",
+    # LLM functions
+    "get_llm",
+    "validate_llm_settings",
 ]

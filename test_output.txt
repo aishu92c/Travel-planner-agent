@@ -1,0 +1,483 @@
+============================= test session starts ==============================
+collected 58 items
+
+tests/test_tools.py ...F...F..F.....F........F.......................F.. [ 89%]
+......                                                                   [100%]
+
+=================================== FAILURES ===================================
+__ TestBudgetCalculator.test_budget_feasibility_parametrized[500-5-150-False] __
+
+self = <tests.test_tools.TestBudgetCalculator object at 0x122763e10>
+budget = 500, duration = 5, region_min = 150, expected_feasible = False
+
+    @pytest.mark.parametrize("budget,duration,region_min,expected_feasible", [
+        (5000, 5, 150, True),   # Europe: needs 750, has 5000
+        (500, 5, 150, False),   # Europe: needs 750, has 500
+        (1000, 10, 100, True),  # Asia: needs 1000, has 1000
+        (999, 10, 100, False),  # Asia: needs 1000, has 999
+        (2000, 7, 120, True),   # Americas: needs 840, has 2000
+        (700, 7, 120, False),   # Americas: needs 840, has 700
+    ])
+    def test_budget_feasibility_parametrized(self, budget, duration, region_min, expected_feasible):
+        """Test budget feasibility with multiple scenarios.
+    
+        Args:
+            budget: Total budget
+            duration: Trip duration in days
+            region_min: Minimum per day for region
+            expected_feasible: Expected feasibility result
+        """
+        # Create state with specific budget and duration
+        state = AgentState(
+            destination="Test Destination",
+            budget=float(budget),
+            duration=duration,
+        )
+    
+        result = budget_analysis_node(state)
+    
+>       assert result["budget_feasible"] == expected_feasible, \
+            f"Budget {budget} for {duration} days should be {'feasible' if expected_feasible else 'not feasible'}"
+E       AssertionError: Budget 500 for 5 days should be not feasible
+E       assert True == False
+
+tests/test_tools.py:272: AssertionError
+----------------------------- Captured stdout call -----------------------------
+2025-11-08 21:01:10 - src.nodes.planning_nodes - INFO - ======================================================================
+2025-11-08 21:01:10 - src.nodes.planning_nodes - INFO - Starting budget analysis node
+2025-11-08 21:01:10 - src.nodes.planning_nodes - INFO - ======================================================================
+2025-11-08 21:01:10 - src.nodes.planning_nodes - INFO - Input parameters:
+2025-11-08 21:01:10 - src.nodes.planning_nodes - INFO -   Total Budget: $500.00
+2025-11-08 21:01:10 - src.nodes.planning_nodes - INFO -   Destination: Test Destination
+2025-11-08 21:01:10 - src.nodes.planning_nodes - INFO -   Duration: 5 days
+2025-11-08 21:01:10 - src.nodes.planning_nodes - INFO - 
+Step 1: Calculating budget breakdown...
+2025-11-08 21:01:10 - src.nodes.planning_nodes - INFO - Budget allocation:
+2025-11-08 21:01:10 - src.nodes.planning_nodes - INFO -   Flights: $200.00 (40.0%)
+2025-11-08 21:01:10 - src.nodes.planning_nodes - INFO -   Accommodation: $175.00 (35.0%)
+2025-11-08 21:01:10 - src.nodes.planning_nodes - INFO -   Activities: $75.00 (15.0%)
+2025-11-08 21:01:10 - src.nodes.planning_nodes - INFO -   Food: $50.00 (10.0%)
+2025-11-08 21:01:10 - src.nodes.planning_nodes - INFO - 
+Step 2: Determining minimum required budget...
+2025-11-08 21:01:10 - src.nodes.planning_nodes - WARNING - Destination 'Test Destination' not recognized. Using default region (asia) with $100/day
+2025-11-08 21:01:10 - src.nodes.planning_nodes - INFO -   Region identified: ASIA
+2025-11-08 21:01:10 - src.nodes.planning_nodes - INFO -   Minimum per day for asia: $100/day
+2025-11-08 21:01:10 - src.nodes.planning_nodes - INFO -   Duration: 5 days
+2025-11-08 21:01:10 - src.nodes.planning_nodes - INFO -   Minimum required budget: $100 × 5 days = $500.00
+2025-11-08 21:01:10 - src.nodes.planning_nodes - INFO - 
+Step 3: Checking budget feasibility...
+2025-11-08 21:01:10 - src.nodes.planning_nodes - INFO -   ✓ BUDGET FEASIBLE
+2025-11-08 21:01:10 - src.nodes.planning_nodes - INFO -   Available budget: $500.00
+2025-11-08 21:01:10 - src.nodes.planning_nodes - INFO -   Minimum required: $500.00
+2025-11-08 21:01:10 - src.nodes.planning_nodes - INFO -   Surplus/flexibility: $0.00
+2025-11-08 21:01:10 - src.nodes.planning_nodes - INFO - 
+Step 4: Generating analysis summary...
+2025-11-08 21:01:10 - src.nodes.planning_nodes - INFO - 
+Analysis Summary:
+Budget Analysis for Test Destination (5 days)
+Total Budget: $500.00
+Region: ASIA
+Minimum per day: $100
+Minimum total required: $500.00
+Feasible: Yes
+2025-11-08 21:01:10 - src.nodes.planning_nodes - INFO - ======================================================================
+2025-11-08 21:01:10 - src.nodes.planning_nodes - INFO - Budget analysis node completed successfully
+2025-11-08 21:01:10 - src.nodes.planning_nodes - INFO - ======================================================================
+----------------------------- Captured stderr call -----------------------------
+2025-11-08 21:01:10,408 - src.nodes.planning_nodes - INFO - ======================================================================
+2025-11-08 21:01:10,408 - src.nodes.planning_nodes - INFO - Starting budget analysis node
+2025-11-08 21:01:10,409 - src.nodes.planning_nodes - INFO - ======================================================================
+2025-11-08 21:01:10,409 - src.nodes.planning_nodes - INFO - Input parameters:
+2025-11-08 21:01:10,409 - src.nodes.planning_nodes - INFO -   Total Budget: $500.00
+2025-11-08 21:01:10,409 - src.nodes.planning_nodes - INFO -   Destination: Test Destination
+2025-11-08 21:01:10,409 - src.nodes.planning_nodes - INFO -   Duration: 5 days
+2025-11-08 21:01:10,409 - src.nodes.planning_nodes - INFO - 
+Step 1: Calculating budget breakdown...
+2025-11-08 21:01:10,409 - src.nodes.planning_nodes - INFO - Budget allocation:
+2025-11-08 21:01:10,409 - src.nodes.planning_nodes - INFO -   Flights: $200.00 (40.0%)
+2025-11-08 21:01:10,409 - src.nodes.planning_nodes - INFO -   Accommodation: $175.00 (35.0%)
+2025-11-08 21:01:10,409 - src.nodes.planning_nodes - INFO -   Activities: $75.00 (15.0%)
+2025-11-08 21:01:10,409 - src.nodes.planning_nodes - INFO -   Food: $50.00 (10.0%)
+2025-11-08 21:01:10,409 - src.nodes.planning_nodes - INFO - 
+Step 2: Determining minimum required budget...
+2025-11-08 21:01:10,409 - src.nodes.planning_nodes - WARNING - Destination 'Test Destination' not recognized. Using default region (asia) with $100/day
+2025-11-08 21:01:10,409 - src.nodes.planning_nodes - INFO -   Region identified: ASIA
+2025-11-08 21:01:10,409 - src.nodes.planning_nodes - INFO -   Minimum per day for asia: $100/day
+2025-11-08 21:01:10,409 - src.nodes.planning_nodes - INFO -   Duration: 5 days
+2025-11-08 21:01:10,410 - src.nodes.planning_nodes - INFO -   Minimum required budget: $100 × 5 days = $500.00
+2025-11-08 21:01:10,410 - src.nodes.planning_nodes - INFO - 
+Step 3: Checking budget feasibility...
+2025-11-08 21:01:10,410 - src.nodes.planning_nodes - INFO -   ✓ BUDGET FEASIBLE
+2025-11-08 21:01:10,410 - src.nodes.planning_nodes - INFO -   Available budget: $500.00
+2025-11-08 21:01:10,410 - src.nodes.planning_nodes - INFO -   Minimum required: $500.00
+2025-11-08 21:01:10,410 - src.nodes.planning_nodes - INFO -   Surplus/flexibility: $0.00
+2025-11-08 21:01:10,410 - src.nodes.planning_nodes - INFO - 
+Step 4: Generating analysis summary...
+2025-11-08 21:01:10,410 - src.nodes.planning_nodes - INFO - 
+Analysis Summary:
+Budget Analysis for Test Destination (5 days)
+Total Budget: $500.00
+Region: ASIA
+Minimum per day: $100
+Minimum total required: $500.00
+Feasible: Yes
+2025-11-08 21:01:10,410 - src.nodes.planning_nodes - INFO - ======================================================================
+2025-11-08 21:01:10,410 - src.nodes.planning_nodes - INFO - Budget analysis node completed successfully
+2025-11-08 21:01:10,410 - src.nodes.planning_nodes - INFO - ======================================================================
+------------------------------ Captured log call -------------------------------
+INFO     src.nodes.planning_nodes:planning_nodes.py:117 ======================================================================
+INFO     src.nodes.planning_nodes:planning_nodes.py:118 Starting budget analysis node
+INFO     src.nodes.planning_nodes:planning_nodes.py:119 ======================================================================
+INFO     src.nodes.planning_nodes:planning_nodes.py:126 Input parameters:
+INFO     src.nodes.planning_nodes:planning_nodes.py:127   Total Budget: $500.00
+INFO     src.nodes.planning_nodes:planning_nodes.py:128   Destination: Test Destination
+INFO     src.nodes.planning_nodes:planning_nodes.py:129   Duration: 5 days
+INFO     src.nodes.planning_nodes:planning_nodes.py:141 
+Step 1: Calculating budget breakdown...
+INFO     src.nodes.planning_nodes:planning_nodes.py:159 Budget allocation:
+INFO     src.nodes.planning_nodes:planning_nodes.py:162   Flights: $200.00 (40.0%)
+INFO     src.nodes.planning_nodes:planning_nodes.py:162   Accommodation: $175.00 (35.0%)
+INFO     src.nodes.planning_nodes:planning_nodes.py:162   Activities: $75.00 (15.0%)
+INFO     src.nodes.planning_nodes:planning_nodes.py:162   Food: $50.00 (10.0%)
+INFO     src.nodes.planning_nodes:planning_nodes.py:165 
+Step 2: Determining minimum required budget...
+WARNING  src.nodes.planning_nodes:planning_nodes.py:78 Destination 'Test Destination' not recognized. Using default region (asia) with $100/day
+INFO     src.nodes.planning_nodes:planning_nodes.py:169   Region identified: ASIA
+INFO     src.nodes.planning_nodes:planning_nodes.py:170   Minimum per day for asia: $100/day
+INFO     src.nodes.planning_nodes:planning_nodes.py:174   Duration: 5 days
+INFO     src.nodes.planning_nodes:planning_nodes.py:175   Minimum required budget: $100 × 5 days = $500.00
+INFO     src.nodes.planning_nodes:planning_nodes.py:178 
+Step 3: Checking budget feasibility...
+INFO     src.nodes.planning_nodes:planning_nodes.py:183   ✓ BUDGET FEASIBLE
+INFO     src.nodes.planning_nodes:planning_nodes.py:184   Available budget: $500.00
+INFO     src.nodes.planning_nodes:planning_nodes.py:185   Minimum required: $500.00
+INFO     src.nodes.planning_nodes:planning_nodes.py:186   Surplus/flexibility: $0.00
+INFO     src.nodes.planning_nodes:planning_nodes.py:195 
+Step 4: Generating analysis summary...
+INFO     src.nodes.planning_nodes:planning_nodes.py:204 
+Analysis Summary:
+Budget Analysis for Test Destination (5 days)
+Total Budget: $500.00
+Region: ASIA
+Minimum per day: $100
+Minimum total required: $500.00
+Feasible: Yes
+INFO     src.nodes.planning_nodes:planning_nodes.py:216 ======================================================================
+INFO     src.nodes.planning_nodes:planning_nodes.py:217 Budget analysis node completed successfully
+INFO     src.nodes.planning_nodes:planning_nodes.py:218 ======================================================================
+__ TestBudgetCalculator.test_budget_feasibility_parametrized[700-7-120-False] __
+
+self = <tests.test_tools.TestBudgetCalculator object at 0x122774850>
+budget = 700, duration = 7, region_min = 120, expected_feasible = False
+
+    @pytest.mark.parametrize("budget,duration,region_min,expected_feasible", [
+        (5000, 5, 150, True),   # Europe: needs 750, has 5000
+        (500, 5, 150, False),   # Europe: needs 750, has 500
+        (1000, 10, 100, True),  # Asia: needs 1000, has 1000
+        (999, 10, 100, False),  # Asia: needs 1000, has 999
+        (2000, 7, 120, True),   # Americas: needs 840, has 2000
+        (700, 7, 120, False),   # Americas: needs 840, has 700
+    ])
+    def test_budget_feasibility_parametrized(self, budget, duration, region_min, expected_feasible):
+        """Test budget feasibility with multiple scenarios.
+    
+        Args:
+            budget: Total budget
+            duration: Trip duration in days
+            region_min: Minimum per day for region
+            expected_feasible: Expected feasibility result
+        """
+        # Create state with specific budget and duration
+        state = AgentState(
+            destination="Test Destination",
+            budget=float(budget),
+            duration=duration,
+        )
+    
+        result = budget_analysis_node(state)
+    
+>       assert result["budget_feasible"] == expected_feasible, \
+            f"Budget {budget} for {duration} days should be {'feasible' if expected_feasible else 'not feasible'}"
+E       AssertionError: Budget 700 for 7 days should be not feasible
+E       assert True == False
+
+tests/test_tools.py:272: AssertionError
+----------------------------- Captured stdout call -----------------------------
+2025-11-08 21:01:10 - src.nodes.planning_nodes - INFO - ======================================================================
+2025-11-08 21:01:10 - src.nodes.planning_nodes - INFO - Starting budget analysis node
+2025-11-08 21:01:10 - src.nodes.planning_nodes - INFO - ======================================================================
+2025-11-08 21:01:10 - src.nodes.planning_nodes - INFO - Input parameters:
+2025-11-08 21:01:10 - src.nodes.planning_nodes - INFO -   Total Budget: $700.00
+2025-11-08 21:01:10 - src.nodes.planning_nodes - INFO -   Destination: Test Destination
+2025-11-08 21:01:10 - src.nodes.planning_nodes - INFO -   Duration: 7 days
+2025-11-08 21:01:10 - src.nodes.planning_nodes - INFO - 
+Step 1: Calculating budget breakdown...
+2025-11-08 21:01:10 - src.nodes.planning_nodes - INFO - Budget allocation:
+2025-11-08 21:01:10 - src.nodes.planning_nodes - INFO -   Flights: $280.00 (40.0%)
+2025-11-08 21:01:10 - src.nodes.planning_nodes - INFO -   Accommodation: $245.00 (35.0%)
+2025-11-08 21:01:10 - src.nodes.planning_nodes - INFO -   Activities: $105.00 (15.0%)
+2025-11-08 21:01:10 - src.nodes.planning_nodes - INFO -   Food: $70.00 (10.0%)
+2025-11-08 21:01:10 - src.nodes.planning_nodes - INFO - 
+Step 2: Determining minimum required budget...
+2025-11-08 21:01:10 - src.nodes.planning_nodes - WARNING - Destination 'Test Destination' not recognized. Using default region (asia) with $100/day
+2025-11-08 21:01:10 - src.nodes.planning_nodes - INFO -   Region identified: ASIA
+2025-11-08 21:01:10 - src.nodes.planning_nodes - INFO -   Minimum per day for asia: $100/day
+2025-11-08 21:01:10 - src.nodes.planning_nodes - INFO -   Duration: 7 days
+2025-11-08 21:01:10 - src.nodes.planning_nodes - INFO -   Minimum required budget: $100 × 7 days = $700.00
+2025-11-08 21:01:10 - src.nodes.planning_nodes - INFO - 
+Step 3: Checking budget feasibility...
+2025-11-08 21:01:10 - src.nodes.planning_nodes - INFO -   ✓ BUDGET FEASIBLE
+2025-11-08 21:01:10 - src.nodes.planning_nodes - INFO -   Available budget: $700.00
+2025-11-08 21:01:10 - src.nodes.planning_nodes - INFO -   Minimum required: $700.00
+2025-11-08 21:01:10 - src.nodes.planning_nodes - INFO -   Surplus/flexibility: $0.00
+2025-11-08 21:01:10 - src.nodes.planning_nodes - INFO - 
+Step 4: Generating analysis summary...
+2025-11-08 21:01:10 - src.nodes.planning_nodes - INFO - 
+Analysis Summary:
+Budget Analysis for Test Destination (7 days)
+Total Budget: $700.00
+Region: ASIA
+Minimum per day: $100
+Minimum total required: $700.00
+Feasible: Yes
+2025-11-08 21:01:10 - src.nodes.planning_nodes - INFO - ======================================================================
+2025-11-08 21:01:10 - src.nodes.planning_nodes - INFO - Budget analysis node completed successfully
+2025-11-08 21:01:10 - src.nodes.planning_nodes - INFO - ======================================================================
+----------------------------- Captured stderr call -----------------------------
+2025-11-08 21:01:10,437 - src.nodes.planning_nodes - INFO - ======================================================================
+2025-11-08 21:01:10,438 - src.nodes.planning_nodes - INFO - Starting budget analysis node
+2025-11-08 21:01:10,438 - src.nodes.planning_nodes - INFO - ======================================================================
+2025-11-08 21:01:10,438 - src.nodes.planning_nodes - INFO - Input parameters:
+2025-11-08 21:01:10,438 - src.nodes.planning_nodes - INFO -   Total Budget: $700.00
+2025-11-08 21:01:10,438 - src.nodes.planning_nodes - INFO -   Destination: Test Destination
+2025-11-08 21:01:10,438 - src.nodes.planning_nodes - INFO -   Duration: 7 days
+2025-11-08 21:01:10,438 - src.nodes.planning_nodes - INFO - 
+Step 1: Calculating budget breakdown...
+2025-11-08 21:01:10,438 - src.nodes.planning_nodes - INFO - Budget allocation:
+2025-11-08 21:01:10,438 - src.nodes.planning_nodes - INFO -   Flights: $280.00 (40.0%)
+2025-11-08 21:01:10,438 - src.nodes.planning_nodes - INFO -   Accommodation: $245.00 (35.0%)
+2025-11-08 21:01:10,438 - src.nodes.planning_nodes - INFO -   Activities: $105.00 (15.0%)
+2025-11-08 21:01:10,438 - src.nodes.planning_nodes - INFO -   Food: $70.00 (10.0%)
+2025-11-08 21:01:10,438 - src.nodes.planning_nodes - INFO - 
+Step 2: Determining minimum required budget...
+2025-11-08 21:01:10,438 - src.nodes.planning_nodes - WARNING - Destination 'Test Destination' not recognized. Using default region (asia) with $100/day
+2025-11-08 21:01:10,439 - src.nodes.planning_nodes - INFO -   Region identified: ASIA
+2025-11-08 21:01:10,439 - src.nodes.planning_nodes - INFO -   Minimum per day for asia: $100/day
+2025-11-08 21:01:10,439 - src.nodes.planning_nodes - INFO -   Duration: 7 days
+2025-11-08 21:01:10,439 - src.nodes.planning_nodes - INFO -   Minimum required budget: $100 × 7 days = $700.00
+2025-11-08 21:01:10,439 - src.nodes.planning_nodes - INFO - 
+Step 3: Checking budget feasibility...
+2025-11-08 21:01:10,439 - src.nodes.planning_nodes - INFO -   ✓ BUDGET FEASIBLE
+2025-11-08 21:01:10,439 - src.nodes.planning_nodes - INFO -   Available budget: $700.00
+2025-11-08 21:01:10,439 - src.nodes.planning_nodes - INFO -   Minimum required: $700.00
+2025-11-08 21:01:10,439 - src.nodes.planning_nodes - INFO -   Surplus/flexibility: $0.00
+2025-11-08 21:01:10,439 - src.nodes.planning_nodes - INFO - 
+Step 4: Generating analysis summary...
+2025-11-08 21:01:10,439 - src.nodes.planning_nodes - INFO - 
+Analysis Summary:
+Budget Analysis for Test Destination (7 days)
+Total Budget: $700.00
+Region: ASIA
+Minimum per day: $100
+Minimum total required: $700.00
+Feasible: Yes
+2025-11-08 21:01:10,439 - src.nodes.planning_nodes - INFO - ======================================================================
+2025-11-08 21:01:10,440 - src.nodes.planning_nodes - INFO - Budget analysis node completed successfully
+2025-11-08 21:01:10,440 - src.nodes.planning_nodes - INFO - ======================================================================
+------------------------------ Captured log call -------------------------------
+INFO     src.nodes.planning_nodes:planning_nodes.py:117 ======================================================================
+INFO     src.nodes.planning_nodes:planning_nodes.py:118 Starting budget analysis node
+INFO     src.nodes.planning_nodes:planning_nodes.py:119 ======================================================================
+INFO     src.nodes.planning_nodes:planning_nodes.py:126 Input parameters:
+INFO     src.nodes.planning_nodes:planning_nodes.py:127   Total Budget: $700.00
+INFO     src.nodes.planning_nodes:planning_nodes.py:128   Destination: Test Destination
+INFO     src.nodes.planning_nodes:planning_nodes.py:129   Duration: 7 days
+INFO     src.nodes.planning_nodes:planning_nodes.py:141 
+Step 1: Calculating budget breakdown...
+INFO     src.nodes.planning_nodes:planning_nodes.py:159 Budget allocation:
+INFO     src.nodes.planning_nodes:planning_nodes.py:162   Flights: $280.00 (40.0%)
+INFO     src.nodes.planning_nodes:planning_nodes.py:162   Accommodation: $245.00 (35.0%)
+INFO     src.nodes.planning_nodes:planning_nodes.py:162   Activities: $105.00 (15.0%)
+INFO     src.nodes.planning_nodes:planning_nodes.py:162   Food: $70.00 (10.0%)
+INFO     src.nodes.planning_nodes:planning_nodes.py:165 
+Step 2: Determining minimum required budget...
+WARNING  src.nodes.planning_nodes:planning_nodes.py:78 Destination 'Test Destination' not recognized. Using default region (asia) with $100/day
+INFO     src.nodes.planning_nodes:planning_nodes.py:169   Region identified: ASIA
+INFO     src.nodes.planning_nodes:planning_nodes.py:170   Minimum per day for asia: $100/day
+INFO     src.nodes.planning_nodes:planning_nodes.py:174   Duration: 7 days
+INFO     src.nodes.planning_nodes:planning_nodes.py:175   Minimum required budget: $100 × 7 days = $700.00
+INFO     src.nodes.planning_nodes:planning_nodes.py:178 
+Step 3: Checking budget feasibility...
+INFO     src.nodes.planning_nodes:planning_nodes.py:183   ✓ BUDGET FEASIBLE
+INFO     src.nodes.planning_nodes:planning_nodes.py:184   Available budget: $700.00
+INFO     src.nodes.planning_nodes:planning_nodes.py:185   Minimum required: $700.00
+INFO     src.nodes.planning_nodes:planning_nodes.py:186   Surplus/flexibility: $0.00
+INFO     src.nodes.planning_nodes:planning_nodes.py:195 
+Step 4: Generating analysis summary...
+INFO     src.nodes.planning_nodes:planning_nodes.py:204 
+Analysis Summary:
+Budget Analysis for Test Destination (7 days)
+Total Budget: $700.00
+Region: ASIA
+Minimum per day: $100
+Minimum total required: $700.00
+Feasible: Yes
+INFO     src.nodes.planning_nodes:planning_nodes.py:216 ======================================================================
+INFO     src.nodes.planning_nodes:planning_nodes.py:217 Budget analysis node completed successfully
+INFO     src.nodes.planning_nodes:planning_nodes.py:218 ======================================================================
+____________ TestBudgetCalculator.test_negative_budget_raises_error ____________
+
+self = <tests.test_tools.TestBudgetCalculator object at 0x122775b90>
+
+    def test_negative_budget_raises_error(self):
+        """Test that negative budget raises ValueError."""
+>       state = AgentState(
+            destination="Paris, France",
+            budget=-1000.0,
+            duration=5,
+        )
+E       pydantic_core._pydantic_core.ValidationError: 1 validation error for AgentState
+E       budget
+E         Input should be greater than or equal to 0 [type=greater_than_equal, input_value=-1000.0, input_type=float]
+E           For further information visit https://errors.pydantic.dev/2.12/v/greater_than_equal
+
+tests/test_tools.py:305: ValidationError
+_____ TestFlightSearch.test_search_flights_invalid_input_graceful_handling _____
+
+self = <tests.test_tools.TestFlightSearch object at 0x122780710>
+
+    def test_search_flights_invalid_input_graceful_handling(self):
+        """Test that invalid input is handled gracefully."""
+        # State with no budget breakdown
+>       state = AgentState(
+            destination="Tokyo, Japan",
+            budget=1000.0,
+            duration=5,
+            budget_breakdown=None,  # No breakdown
+        )
+E       pydantic_core._pydantic_core.ValidationError: 1 validation error for AgentState
+E       budget_breakdown
+E         Input should be a valid dictionary [type=dict_type, input_value=None, input_type=NoneType]
+E           For further information visit https://errors.pydantic.dev/2.12/v/dict_type
+
+tests/test_tools.py:394: ValidationError
+______ TestHotelSearch.test_search_hotels_invalid_input_graceful_handling ______
+
+self = <tests.test_tools.TestHotelSearch object at 0x122782e10>
+
+    def test_search_hotels_invalid_input_graceful_handling(self):
+        """Test graceful handling of invalid input."""
+>       state = AgentState(
+            destination="Tokyo, Japan",
+            budget=1000.0,
+            duration=5,
+            budget_breakdown=None,
+        )
+E       pydantic_core._pydantic_core.ValidationError: 1 validation error for AgentState
+E       budget_breakdown
+E         Input should be a valid dictionary [type=dict_type, input_value=None, input_type=NoneType]
+E           For further information visit https://errors.pydantic.dev/2.12/v/dict_type
+
+tests/test_tools.py:534: ValidationError
+_______________ TestErrorHandling.test_missing_budget_breakdown ________________
+
+self = <tests.test_tools.TestErrorHandling object at 0x122792690>
+
+    def test_missing_budget_breakdown(self):
+        """Test handling when budget breakdown is missing."""
+>       state = AgentState(
+            destination="Paris, France",
+            budget=1000.0,
+            duration=5,
+            budget_breakdown=None,
+        )
+E       pydantic_core._pydantic_core.ValidationError: 1 validation error for AgentState
+E       budget_breakdown
+E         Input should be a valid dictionary [type=dict_type, input_value=None, input_type=NoneType]
+E           For further information visit https://errors.pydantic.dev/2.12/v/dict_type
+
+tests/test_tools.py:722: ValidationError
+=============================== warnings summary ===============================
+../../../../opt/homebrew/lib/python3.11/site-packages/_pytest/config/__init__.py:1439
+  /opt/homebrew/lib/python3.11/site-packages/_pytest/config/__init__.py:1439: PytestConfigWarning: Unknown config option: asyncio_mode
+  
+    self._warn_or_fail_if_strict(f"Unknown config option: {key}\n")
+
+src/agents/state.py:31
+  /Users/ab000746/Downloads/Travel-planner-agent/src/agents/state.py:31: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class Message(BaseModel):
+
+src/agents/state.py:80
+  /Users/ab000746/Downloads/Travel-planner-agent/src/agents/state.py:80: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class AgentMetadata(BaseModel):
+
+src/agents/state.py:130
+  /Users/ab000746/Downloads/Travel-planner-agent/src/agents/state.py:130: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class AgentState(BaseModel):
+
+src/agents/state.py:302
+  /Users/ab000746/Downloads/Travel-planner-agent/src/agents/state.py:302: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ToolInput(BaseModel):
+
+src/agents/state.py:379
+  /Users/ab000746/Downloads/Travel-planner-agent/src/agents/state.py:379: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class ToolOutput(BaseModel):
+
+src/agents/state.py:469
+  /Users/ab000746/Downloads/Travel-planner-agent/src/agents/state.py:469: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class TravelPlannerInput(BaseModel):
+
+src/agents/state.py:547
+  /Users/ab000746/Downloads/Travel-planner-agent/src/agents/state.py:547: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class AgentDecision(BaseModel):
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+================================ tests coverage ================================
+_______________ coverage: platform darwin, python 3.11.6-final-0 _______________
+
+Name                                     Stmts   Miss  Cover   Missing
+----------------------------------------------------------------------
+src/__init__.py                              4      0   100%
+src/__main__.py                              2      2     0%   7-8
+src/agents/__init__.py                       2      0   100%
+src/agents/state.py                        149     27    82%   249-251, 261-264, 268, 272-274, 346-350, 430-434, 438, 442, 518-520, 526-528
+src/api/__init__.py                          2      2     0%   21-41
+src/api/models.py                          118    118     0%   13-582
+src/api/routes/__init__.py                   1      1     0%   24
+src/cache/__init__.py                        1      1     0%   29
+src/config/__init__.py                       2      0   100%
+src/config/environments/__init__.py          4      4     0%   17-21
+src/config/environments/development.py       3      3     0%   11-28
+src/config/environments/production.py        3      3     0%   11-33
+src/config/environments/staging.py           3      3     0%   11-27
+src/config/settings.py                     234     81    65%   72-74, 149-157, 597-604, 706-731, 735, 739, 743, 761, 772-773, 802-860, 883-920
+src/data_pipeline/__init__.py                1      1     0%   24
+src/graph.py                               136    136     0%   14-542
+src/main.py                                250    250     0%   28-694
+src/nodes/__init__.py                        4      0   100%
+src/nodes/itinerary_nodes.py               117    101    14%   56-214, 239, 283-344, 356-359, 376-382, 417-497
+src/nodes/planning_nodes.py                 77      2    97%   133-134
+src/nodes/tool_nodes.py                    120     10    92%   81-82, 155-157, 220-221, 297-299
+src/observability/__init__.py                3      3     0%   42-69
+src/observability/logging.py               210    210     0%   29-761
+src/observability/metrics.py               162    162     0%   28-662
+src/rag/__init__.py                          2      2     0%   23-40
+src/rag/models.py                          158    158     0%   15-530
+src/utils/__init__.py                       12      4    67%   52-54, 90-91
+src/utils/aws_helpers.py                   235    206    12%   66-80, 113-158, 189-206, 227-241, 265-296, 321-349, 373-401, 426-458, 476-501, 514-525, 552-616, 646-694
+src/utils/error_handler.py                 126     95    25%   73-75, 179-239, 259-301, 317, 329, 341, 353-354, 388-390, 394-395, 408-422, 440-458, 467-488
+src/utils/logger.py                         54     23    57%   84, 96, 111-114, 131-135, 152-157, 176-182
+src/utils/retry.py                         126    103    18%   103-149, 234-280, 376-418, 466-471, 522-530, 534-535, 539-542, 550, 558-564, 568-575, 583
+src/utils/validators.py                    105     88    16%   42-53, 141-153, 247-264, 334-374, 442-467, 566-603, 707-733
+src/utils/visualize.py                     159    139    13%   69-150, 177-246, 259-293, 305-632, 644-676, 688-704, 709, 722, 740-741
+----------------------------------------------------------------------
+TOTAL                                     2585   1938    25%
+Coverage HTML written to dir htmlcov
+=========================== short test summary info ============================
+FAILED tests/test_tools.py::TestBudgetCalculator::test_budget_feasibility_parametrized[500-5-150-False]
+FAILED tests/test_tools.py::TestBudgetCalculator::test_budget_feasibility_parametrized[700-7-120-False]
+FAILED tests/test_tools.py::TestBudgetCalculator::test_negative_budget_raises_error
+FAILED tests/test_tools.py::TestFlightSearch::test_search_flights_invalid_input_graceful_handling
+FAILED tests/test_tools.py::TestHotelSearch::test_search_hotels_invalid_input_graceful_handling
+FAILED tests/test_tools.py::TestErrorHandling::test_missing_budget_breakdown
+=================== 6 failed, 52 passed, 8 warnings in 1.50s ===================
